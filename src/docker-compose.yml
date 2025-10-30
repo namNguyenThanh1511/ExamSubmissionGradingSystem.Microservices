@@ -1,0 +1,59 @@
+# src/docker-compose.yml
+version: "3.9"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Nam@15112003
+    ports:
+      - "1432:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  iam_api:
+    build:
+      context: . # src/ là gốc
+      dockerfile: Services/IAM/IAM.API/Dockerfile # Từ src/
+    ports:
+      - "8081:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=IAMDb;User Id=sa;Password=Nam@15112003;TrustServerCertificate=True;
+    # depends_on:
+    #   sqlserver:
+    #     condition: service_healthy
+
+  course_api:
+    build:
+      context: .
+      dockerfile: Services/CourseManagement/CourseManagement.API/Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ApiGateways/YarnApiGateway/Dockerfile
+    ports:
+      - "7232:443"
+      - "5103:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+;http://+
+      - ASPNETCORE_HTTPS_PORT=7232
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123456
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ../https:/https:ro # LÊN 1 cấp → ExamSubmissionGradingSystem.Microservices/https
+    depends_on:
+      - iam_api
+      - course_api
+
+volumes:
+  sqlserver-data:
