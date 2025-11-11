@@ -1,3 +1,5 @@
+﻿
+using Microsoft.OpenApi.Models;
 
 namespace CourseManagement.API
 {
@@ -23,15 +25,16 @@ namespace CourseManagement.API
                 {
                     c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                     {
-                        var serverUrl = $"{httpReq.Scheme}://{httpReq.Host.Value}/course";
-                        swaggerDoc.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+
+                        // Swagger UI gọi qua Gateway nên cần host là Gateway
+                        //var serverUrl = $"{httpReq.Scheme}://{httpReq.Host.Value}/iam";
+                        var serverUrl = "http://localhost:5103/course"; // Gateway host + path /iam
+                        swaggerDoc.Servers = new List<OpenApiServer>
                         {
                             new() { Url = serverUrl }
                         };
                     });
                 });
-
-                app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();

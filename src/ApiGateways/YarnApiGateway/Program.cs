@@ -23,7 +23,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+// =================== ✅ ROLE-BASED AUTHORIZATION ===================
+builder.Services.AddAuthorizationBuilder()
+                        .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
+                        .AddPolicy("ManagerOnly", policy => policy.RequireRole("Manager"));
+
+//builder.Services.AddAuthorization();
 
 // =================== 🌐 YARP & SWAGGER ===================
 builder.Services.AddReverseProxy()
@@ -80,28 +85,38 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors();
-// ✅ Cho phép IAM service (login/register) bỏ qua auth
+/*
+UseRouting() → xác định route
+
+UseAuthentication() → xác thực user
+
+UseAuthorization() → kiểm tra role/permission
+
+UseEndpoints(...) → map các endpoint
+ */
+// 1️⃣ /iam/* → miễn auth
 app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/iam"), subApp =>
 {
     subApp.UseRouting();
-    subApp.UseAuthentication();
-    subApp.UseAuthorization();
+    subApp.UseAuthentication();  // optional nếu miễn auth
+    subApp.UseAuthorization();   // luôn phải có
     subApp.UseEndpoints(endpoints =>
     {
-        endpoints.MapReverseProxy();
+        endpoints.MapReverseProxy();  // IAM miễn auth, không cần RequireAuthorization()
     });
 });
 
-// ✅ Còn lại thì yêu cầu JWT
-app.MapWhen(ctx => !ctx.Request.Path.StartsWithSegments("/iam"), subApp =>
+// 2️⃣ /course/* → AdminOnly
+app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/course"), subApp =>
 {
     subApp.UseRouting();
     subApp.UseAuthentication();
-    subApp.UseAuthorization();
+    subApp.UseAuthorization();   // Bắt buộc
     subApp.UseEndpoints(endpoints =>
     {
-        endpoints.MapReverseProxy().RequireAuthorization();
+        endpoints.MapReverseProxy().RequireAuthorization("AdminOnly");
     });
 });
+
 
 app.Run();
