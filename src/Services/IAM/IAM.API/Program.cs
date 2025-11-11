@@ -5,6 +5,7 @@ using IAM.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Shared.Models;
 using StackExchange.Redis;
 
@@ -66,6 +67,19 @@ namespace IAM.API
                 };
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
+
+
+
+
             var app = builder.Build();
 
             // 🔥 LOG MÔI TRƯỜNG VÀ CONNECTION INFO
@@ -104,8 +118,11 @@ namespace IAM.API
             {
                 c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                 {
-                    var serverUrl = $"{httpReq.Scheme}://{httpReq.Host.Value}/iam";
-                    swaggerDoc.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+
+                    // Swagger UI gọi qua Gateway nên cần host là Gateway
+                    //var serverUrl = $"{httpReq.Scheme}://{httpReq.Host.Value}/iam";
+                    var serverUrl = "http://localhost:5103/iam"; // Gateway host + path /iam
+                    swaggerDoc.Servers = new List<OpenApiServer>
                     {
                         new() { Url = serverUrl }
                     };
@@ -113,7 +130,7 @@ namespace IAM.API
             });
 
             app.UseSwaggerUI();
-
+            app.UseCors();
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.UseExceptionHandler();
