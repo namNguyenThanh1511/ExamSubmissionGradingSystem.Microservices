@@ -1,27 +1,27 @@
 ﻿using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Submission.Services.DTOs;
 using Submission.Services.UploadService;
 
 namespace Submission.Services.StorageService
 {
     public class AwsS3StorageService : IStorageService
     {
-
         private readonly IAmazonS3 _s3Client;
         private readonly string _bucketName;
 
-        public AwsS3StorageService(IConfiguration configuration)
+        public AwsS3StorageService(IOptions<AwsConfig> awsOptions)
         {
-            var awsConfig = configuration.GetSection("AWS");
+            var config = awsOptions.Value ?? throw new ArgumentNullException(nameof(awsOptions));
 
-            _bucketName = awsConfig["BucketName"] ?? throw new ArgumentNullException("AWS:BucketName");
-            var region = RegionEndpoint.GetBySystemName(awsConfig["Region"]);
+            _bucketName = config.BucketName ?? throw new ArgumentNullException("AWS:BucketName");
+            var region = RegionEndpoint.GetBySystemName(config.Region ?? throw new ArgumentNullException("AWS:Region"));
 
             _s3Client = new AmazonS3Client(
-                awsConfig["AccessKey"],
-                awsConfig["SecretKey"],
+                config.AccessKey,
+                config.SecretKey,
                 region
             );
         }
@@ -41,8 +41,7 @@ namespace Submission.Services.StorageService
 
                 await _s3Client.PutObjectAsync(putRequest);
 
-                string fileUrl = $"https://{_bucketName}.s3.amazonaws.com/{putRequest.Key}";
-                return fileUrl;
+                return $"https://{_bucketName}.s3.{_s3Client.Config.RegionEndpoint.SystemName}.amazonaws.com/{putRequest.Key}";
             }
             catch (Exception ex)
             {
