@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.Data;
+﻿using IAM.Services.AuthService;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Extension;
 
