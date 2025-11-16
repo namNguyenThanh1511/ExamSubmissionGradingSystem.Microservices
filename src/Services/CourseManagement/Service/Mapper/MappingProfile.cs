@@ -36,6 +36,23 @@ namespace Service.Mapper
                 .ForMember(dest => dest.ExamTitle, opt => opt.MapFrom(src => src.Exam != null ? src.Exam.Title : null));
             CreateMap<RubricDto, Rubric>();
             CreateMap<CreateRubricDto, Rubric>();
+            
+            // Examiner mappings
+            CreateMap<Examiner, ExaminerDto>();
+            CreateMap<ExaminerDto, Examiner>();
+            CreateMap<CreateExaminerDto, Examiner>();
+            
+            // Submission mappings
+            CreateMap<Submission, SubmissionDto>()
+                .ForMember(dest => dest.ExaminerName, opt => opt.MapFrom(src => src.Examiner != null ? src.Examiner.FullName : null));
+            CreateMap<SubmissionDto, Submission>();
+            
+            // Violation mappings
+            CreateMap<Violation, ViolationDto>()
+                .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.Submission != null ? src.Submission.StudentCode : null))
+                .ForMember(dest => dest.ExamTitle, opt => opt.MapFrom(src => src.Submission != null && src.Submission.Exam != null ? src.Submission.Exam.Title : null));
+            CreateMap<ViolationDto, Violation>();
+            CreateMap<CreateViolationDto, Violation>();
         }
     }
 }

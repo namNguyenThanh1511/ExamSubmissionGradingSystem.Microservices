@@ -173,6 +173,8 @@ public partial class ExamManagementContext : DbContext
 
             entity.HasIndex(e => e.ExamId, "exam_id");
 
+            entity.HasIndex(e => e.ExaminerId, "examiner_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ExamId).HasColumnName("exam_id");
             entity.Property(e => e.FileUrl)
@@ -185,10 +187,15 @@ public partial class ExamManagementContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("student_code");
             entity.Property(e => e.TotalScore).HasColumnName("total_score");
+            entity.Property(e => e.ExaminerId).HasColumnName("examiner_id");
 
             entity.HasOne(d => d.Exam).WithMany(p => p.Submissions)
                 .HasForeignKey(d => d.ExamId)
                 .HasConstraintName("submission_ibfk_1");
+
+            entity.HasOne(d => d.Examiner).WithMany(p => p.Submissions)
+                .HasForeignKey(d => d.ExaminerId)
+                .HasConstraintName("submission_ibfk_2");
         });
 
         modelBuilder.Entity<Violation>(entity =>

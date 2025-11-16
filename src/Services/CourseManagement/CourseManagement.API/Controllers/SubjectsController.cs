@@ -7,6 +7,12 @@ using Shared.Models;
 
 namespace CourseManagement.API.Controllers
 {
+    /// <summary>
+    /// Subjects Controller
+    /// 
+    /// Role Mapping (Currently Commented Out):
+    /// - Admin: /api/subjects (GET, POST), /api/subjects/{id} (GET)
+    /// </summary>
     [ApiController]
     [Route("api/subjects")]
     //[Authorize(Roles = "Admin")]
@@ -22,10 +28,12 @@ namespace CourseManagement.API.Controllers
         }
 
         /// <summary>
-        /// Get all subjects - Admin only
+        /// Get all subjects
+        /// Role: Admin
         /// </summary>
         /// <returns>List of all subjects</returns>
         [HttpGet]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllSubjects()
         {
             try

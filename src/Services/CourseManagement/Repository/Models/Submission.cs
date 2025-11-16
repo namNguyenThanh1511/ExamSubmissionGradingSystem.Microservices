@@ -17,7 +17,11 @@ public partial class Submission
 
     public double? TotalScore { get; set; }
 
+    public long? ExaminerId { get; set; }
+
     public virtual Exam? Exam { get; set; }
+
+    public virtual Examiner? Examiner { get; set; }
 
     public virtual ICollection<Violation> Violations { get; set; } = new List<Violation>();
 }

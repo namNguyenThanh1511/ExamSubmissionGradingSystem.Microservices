@@ -7,6 +7,12 @@ using Shared.Models;
 
 namespace CourseManagement.API.Controllers
 {
+    /// <summary>
+    /// Exams Controller
+    /// 
+    /// Role Mapping (Currently Commented Out):
+    /// - Admin: /api/exams (GET, POST), /api/exams/{id} (GET)
+    /// </summary>
     [ApiController]
     [Route("api/exams")]
     //[Authorize(Roles = "Admin")]
@@ -22,12 +28,14 @@ namespace CourseManagement.API.Controllers
         }
 
         /// <summary>
-        /// Get all exams with optional filtering - Admin only
+        /// Get all exams with optional filtering
+        /// Role: Admin
         /// </summary>
         /// <param name="semesterId">Optional: Filter by semester ID</param>
         /// <param name="subjectId">Optional: Filter by subject ID</param>
         /// <returns>List of exams matching the filter criteria</returns>
         [HttpGet]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllExams([FromQuery] long? semesterId = null, [FromQuery] long? subjectId = null)
         {
             try

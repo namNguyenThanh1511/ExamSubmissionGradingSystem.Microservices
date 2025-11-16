@@ -32,12 +32,18 @@ namespace CourseManagement.API
             builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
             builder.Services.AddScoped<IExamRepository, ExamRepository>();
             builder.Services.AddScoped<IRubricRepository, RubricRepository>();
+            builder.Services.AddScoped<IExaminerRepository, ExaminerRepository>();
+            builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
+            builder.Services.AddScoped<IViolationRepository, ViolationRepository>();
 
             // Register Services
             builder.Services.AddScoped<ISubjectService, SubjectService>();
             builder.Services.AddScoped<ISemesterService, SemesterService>();
             builder.Services.AddScoped<IExamService, ExamService>();
             builder.Services.AddScoped<IRubricService, RubricService>();
+            builder.Services.AddScoped<IExaminerService, ExaminerService>();
+            builder.Services.AddScoped<ISubmissionService, SubmissionService>();
+            builder.Services.AddScoped<IViolationService, ViolationService>();
 
             // Configure CORS
             builder.Services.AddCors(options =>

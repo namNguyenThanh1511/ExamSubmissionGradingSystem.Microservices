@@ -7,6 +7,12 @@ using Shared.Models;
 
 namespace CourseManagement.API.Controllers
 {
+    /// <summary>
+    /// Rubrics Controller
+    /// 
+    /// Role Mapping (Currently Commented Out):
+    /// - Admin: /api/rubrics/{examId} (GET), /api/rubrics (POST)
+    /// </summary>
     [ApiController]
     [Route("api/rubrics")]
     //[Authorize(Roles = "Admin")]
@@ -23,10 +29,12 @@ namespace CourseManagement.API.Controllers
 
         /// <summary>
         /// Get rubrics by exam ID - Xem rubric theo k? thi
+        /// Role: Admin
         /// </summary>
         /// <param name="examId">Exam ID</param>
         /// <returns>List of rubrics for the specified exam</returns>
         [HttpGet("{examId}")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRubricsByExamId(long examId)
         {
             try

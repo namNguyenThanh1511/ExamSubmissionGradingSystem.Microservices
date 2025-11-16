@@ -10,4 +10,6 @@ public partial class Examiner
     public string? FullName { get; set; }
 
     public string? Email { get; set; }
+
+    public virtual ICollection<Submission> Submissions { get; set; } = new List<Submission>();
 }
