@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.DTO;
 using Service.Services;
@@ -32,7 +33,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="status">Optional: Filter by verified status (true/false)</param>
         /// <returns>Danh sách vi ph?m</returns>
         [HttpGet]
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetViolations([FromQuery] bool? status = null)
         {
             try
@@ -59,7 +60,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="createViolationDto">Violation data</param>
         /// <returns>Vi ph?m ?ã ???c t?o</returns>
         [HttpPost]
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> CreateViolation([FromBody] CreateViolationDto createViolationDto)
         {
             try
@@ -96,7 +97,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="verifyViolationDto">Verification data</param>
         /// <returns>Vi ph?m ?ã ???c c?p nh?t</returns>
         [HttpPatch("{id}/verify")]
-        //[Authorize(Roles = "Moderator")]
+        [Authorize(Roles = "Moderator")]
         public async Task<IActionResult> VerifyViolation(long id, [FromBody] VerifyViolationDto verifyViolationDto)
         {
             try

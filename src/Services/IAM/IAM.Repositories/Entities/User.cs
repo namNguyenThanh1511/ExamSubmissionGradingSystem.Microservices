@@ -17,8 +17,6 @@
     }
     public enum Role
     {
-        Admin,
-        Staff,
-        Customer
+        Admin, Manager, Moderator, Examiner
     }
 }

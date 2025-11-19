@@ -15,7 +15,7 @@ namespace CourseManagement.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/exams")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class ExamsController : ControllerBase
     {
         private readonly IExamService _examService;
@@ -35,7 +35,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="subjectId">Optional: Filter by subject ID</param>
         /// <returns>List of exams matching the filter criteria</returns>
         [HttpGet]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllExams([FromQuery] long? semesterId = null, [FromQuery] long? subjectId = null)
         {
             try
@@ -71,6 +71,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="id">Exam ID</param>
         /// <returns>Exam details</returns>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> GetExamById(long id)
         {
             try
@@ -95,6 +97,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="createExamDto">Exam data</param>
         /// <returns>Created exam</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateExam([FromBody] CreateExamDto createExamDto)
         {
             try

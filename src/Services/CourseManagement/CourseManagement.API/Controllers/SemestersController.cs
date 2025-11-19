@@ -15,7 +15,7 @@ namespace CourseManagement.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/semesters")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class SemestersController : ControllerBase
     {
         private readonly ISemesterService _semesterService;
@@ -33,7 +33,7 @@ namespace CourseManagement.API.Controllers
         /// </summary>
         /// <returns>List of all semesters</returns>
         [HttpGet]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllSemesters()
         {
             try
@@ -54,6 +54,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="id">Semester ID</param>
         /// <returns>Semester details</returns>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> GetSemesterById(long id)
         {
             try
@@ -78,6 +80,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="createSemesterDto">Semester data</param>
         /// <returns>Created semester</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateSemester([FromBody] CreateSemesterDto createSemesterDto)
         {
             try

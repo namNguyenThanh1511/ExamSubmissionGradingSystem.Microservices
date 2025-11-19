@@ -15,7 +15,7 @@ namespace CourseManagement.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/rubrics")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class RubricsController : ControllerBase
     {
         private readonly IRubricService _rubricService;
@@ -34,7 +34,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="examId">Exam ID</param>
         /// <returns>List of rubrics for the specified exam</returns>
         [HttpGet("{examId}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRubricsByExamId(long examId)
         {
             try
@@ -55,6 +55,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="createRubricDto">Rubric data including list of criteria</param>
         /// <returns>Created rubric with criteria</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateRubric([FromBody] CreateRubricDto createRubricDto)
         {
             try

@@ -1,5 +1,4 @@
-﻿
-using IAM.API.Extensions;
+﻿using IAM.API.Extensions;
 using IAM.API.Middleware;
 using IAM.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -33,10 +32,10 @@ namespace IAM.API
             var environment = builder.Environment.EnvironmentName;
             builder.Logging.AddConsole();
 
-            // Database connection
+            // Database connection - CHANGED TO MYSQL
             var connectionString = builder.Configuration.GetConnectionString("IAMDb");
             builder.Services.AddDbContext<IAMDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
             // Redis connection
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
@@ -59,7 +58,7 @@ namespace IAM.API
                     var response = new ApiResponse
                     {
                         IsSuccess = false,
-                        Message = "Dữ liệu không hợp lệ",
+                        Message = "D? li?u không h?p l?",
                         Errors = errors
                     };
 
@@ -82,13 +81,11 @@ namespace IAM.API
 
             var app = builder.Build();
 
-            // 🔥 LOG MÔI TRƯỜNG VÀ CONNECTION INFO
+            // ?? LOG MÔI TRU?NG VÀ CONNECTION INFO
             var logger = app.Services.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("🚀 Application starting in {Environment} environment", environment);
-            logger.LogInformation("📦 SQL Server connection string: {Connection}", connectionString);
-            logger.LogInformation("🔗 Redis connection: {Redis}", builder.Configuration.GetConnectionString("Redis"));
-
-            app.UseMiddleware<JwtBlacklistMiddleware>();
+            logger.LogInformation("?? Application starting in {Environment} environment", environment);
+            logger.LogInformation("?? MySQL connection string: {Connection}", connectionString);
+            logger.LogInformation("?? Redis connection: {Redis}", builder.Configuration.GetConnectionString("Redis"));
 
             // Apply pending migrations automatically
             if (app.Environment.IsEnvironment("Development") || app.Environment.IsEnvironment("Production"))
@@ -101,15 +98,14 @@ namespace IAM.API
                     {
                         if (db.Database.GetPendingMigrations().Any())
                         {
-                            logger.LogInformation("🛠 Applying pending migrations...");
+                            logger.LogInformation("?? Applying pending migrations...");
                             db.Database.Migrate();
-                            logger.LogInformation("✅ Database migrations applied successfully.");
+                            logger.LogInformation("? Database migrations applied successfully.");
                         }
                     }
-                    catch (SqlException ex) when (ex.Number == 2714 || ex.Number == 1801)  // Duplicate object/DB exists
+                    catch (Exception ex)
                     {
-                        // Log & skip (table/DB đã có)
-                        scope.ServiceProvider.GetRequiredService<ILogger<Program>>().LogWarning("Migration skipped: Object already exists. {Error}", ex.Message);
+                        logger.LogWarning("?? Migration error: {Error}", ex.Message);
                     }
                 }
             }
@@ -118,22 +114,26 @@ namespace IAM.API
             {
                 c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                 {
-
-                    // Swagger UI gọi qua Gateway nên cần host là Gateway
-                    //var serverUrl = $"{httpReq.Scheme}://{httpReq.Host.Value}/iam";
-                    var serverUrl = "http://localhost:5103/iam"; // Gateway host + path /iam
+                    // Hỗ trợ cả Direct API access và Gateway access
+                    // Direct API làm mặc định (first in list) để test
                     swaggerDoc.Servers = new List<OpenApiServer>
                     {
-                        new() { Url = serverUrl }
+                        new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}", Description = "Direct API Access (Use this for testing)" },
+                        new OpenApiServer { Url = "http://localhost:5103/iam", Description = "Via API Gateway (Production)" }
                     };
                 });
             });
 
             app.UseSwaggerUI();
-            app.UseCors();
+
+            // ✅ CORRECT MIDDLEWARE ORDER FOR CORS
             app.UseHttpsRedirection();
-            app.UseAuthorization();
-            app.UseExceptionHandler();
+            app.UseRouting();                                     // 1. Routing first
+            app.UseCors();                                        // 2. CORS after routing
+            app.UseMiddleware<JwtBlacklistMiddleware>();          // 3. Custom middleware after CORS
+            app.UseAuthentication();                              // 4. Authentication
+            app.UseAuthorization();                               // 5. Authorization
+            app.UseExceptionHandler();                            // 6. Exception handler
 
             app.MapControllers();
 

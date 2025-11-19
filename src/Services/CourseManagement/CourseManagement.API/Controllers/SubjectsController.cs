@@ -15,7 +15,7 @@ namespace CourseManagement.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/subjects")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class SubjectsController : ControllerBase
     {
         private readonly ISubjectService _subjectService;
@@ -33,7 +33,7 @@ namespace CourseManagement.API.Controllers
         /// </summary>
         /// <returns>List of all subjects</returns>
         [HttpGet]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllSubjects()
         {
             try
@@ -54,6 +54,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="id">Subject ID</param>
         /// <returns>Subject details</returns>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> GetSubjectById(long id)
         {
             try
@@ -78,6 +80,8 @@ namespace CourseManagement.API.Controllers
         /// <param name="createSubjectDto">Subject data</param>
         /// <returns>Created subject</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateSubject([FromBody] CreateSubjectDto createSubjectDto)
         {
             try

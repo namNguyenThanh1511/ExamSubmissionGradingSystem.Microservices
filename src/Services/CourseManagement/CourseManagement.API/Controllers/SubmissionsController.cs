@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.DTO;
 using Service.Services;
@@ -32,7 +33,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="examId">Exam ID</param>
         /// <returns>Danh sách bài n?p</returns>
         [HttpGet]
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetSubmissions([FromQuery] long examId)
         {
             try
@@ -55,7 +56,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="examinerId">Examiner ID</param>
         /// <returns>Bài n?p ?ã ???c c?p nh?t</returns>
         [HttpPatch("{id}/assign/{examinerId}")]
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> AssignExaminer(long id, long examinerId)
         {
             try
@@ -83,7 +84,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="gradeSubmissionDto">Grade data</param>
         /// <returns>Bài n?p ?ã ???c ch?m ?i?m</returns>
         [HttpPatch("{id}/grade")]
-        //[Authorize(Roles = "Examiner")]
+        [Authorize(Roles = "Examiner")]
         public async Task<IActionResult> GradeSubmission(long id, [FromBody] GradeSubmissionDto gradeSubmissionDto)
         {
             try

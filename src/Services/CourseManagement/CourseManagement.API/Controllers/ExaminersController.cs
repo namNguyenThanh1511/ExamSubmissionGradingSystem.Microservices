@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.DTO;
 using Service.Services;
@@ -30,7 +31,7 @@ namespace CourseManagement.API.Controllers
         /// </summary>
         /// <returns>List of examiners</returns>
         [HttpGet]
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetAllExaminers()
         {
             try
@@ -52,7 +53,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="createExaminerDto">Examiner data</param>
         /// <returns>Created examiner</returns>
         [HttpPost]
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> CreateExaminer([FromBody] CreateExaminerDto createExaminerDto)
         {
             try
