@@ -15,7 +15,6 @@ namespace CourseManagement.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/semesters")]
-    [Authorize(Roles = "Admin")]
     public class SemestersController : ControllerBase
     {
         private readonly ISemesterService _semesterService;
@@ -33,7 +32,7 @@ namespace CourseManagement.API.Controllers
         /// </summary>
         /// <returns>List of all semesters</returns>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> GetAllSemesters()
         {
             try
@@ -54,7 +53,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="id">Semester ID</param>
         /// <returns>Semester details</returns>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
 
         public async Task<IActionResult> GetSemesterById(long id)
         {

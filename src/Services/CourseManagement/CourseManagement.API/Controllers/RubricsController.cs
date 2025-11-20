@@ -15,7 +15,6 @@ namespace CourseManagement.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/rubrics")]
-    [Authorize(Roles = "Admin")]
     public class RubricsController : ControllerBase
     {
         private readonly IRubricService _rubricService;
@@ -34,7 +33,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="examId">Exam ID</param>
         /// <returns>List of rubrics for the specified exam</returns>
         [HttpGet("{examId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
         public async Task<IActionResult> GetRubricsByExamId(long examId)
         {
             try
