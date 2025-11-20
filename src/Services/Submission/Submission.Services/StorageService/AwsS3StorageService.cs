@@ -28,25 +28,34 @@ namespace Submission.Services.StorageService
 
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType)
         {
-            try
-            {
-                var putRequest = new PutObjectRequest
-                {
-                    BucketName = _bucketName,
-                    Key = $"submissions/{Guid.NewGuid()}_{fileName}",
-                    InputStream = fileStream,
-                    ContentType = contentType,
-                    CannedACL = S3CannedACL.Private
-                };
+            var key = $"submissions/{Guid.NewGuid()}_{fileName}";
 
-                await _s3Client.PutObjectAsync(putRequest);
-
-                return $"https://{_bucketName}.s3.{_s3Client.Config.RegionEndpoint.SystemName}.amazonaws.com/{putRequest.Key}";
-            }
-            catch (Exception ex)
+            var putRequest = new PutObjectRequest
             {
-                throw new Exception($"S3 upload failed: {ex.Message}");
-            }
+                BucketName = _bucketName,
+                Key = key,
+                InputStream = fileStream,
+                ContentType = contentType,
+                // GIỮ PRIVATE – KHÔNG dùng ACL
+                CannedACL = S3CannedACL.Private
+            };
+
+            await _s3Client.PutObjectAsync(putRequest);
+
+            // Trả về key để controller generate presigned URL
+            return key;
+        }
+        public string GeneratePresignedUrl(string key, int expireMinutes = 60)
+        {
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = _bucketName,
+                Key = key,
+                Expires = DateTime.UtcNow.AddMinutes(expireMinutes),
+                Verb = HttpVerb.GET
+            };
+
+            return _s3Client.GetPreSignedURL(request);
         }
     }
 }

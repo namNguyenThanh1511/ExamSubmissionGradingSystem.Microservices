@@ -92,14 +92,16 @@ namespace Submission.API.Controllers
                     return BadRequest("violation_metadata.json missing");
 
                 // 🔹 Upload solution.zip lên S3
-                string uploadedFileUrl;
+                string key;
+
                 using (var solutionStream = System.IO.File.OpenRead(solutionPath))
                 {
-                    uploadedFileUrl = await _storageService.UploadFileAsync(
-                        solutionStream,
-                        $"{metadata.StudentId}_solution.zip",
-                        "application/zip"
-                    );
+                    key = await _storageService.UploadFileAsync(
+                       solutionStream,
+                       $"{metadata.StudentId}_solution.zip",
+                       "application/zip"
+                   );
+
                 }
 
                 // 🔹 Insert DB record
@@ -107,7 +109,7 @@ namespace Submission.API.Controllers
                 {
                     Id = Guid.NewGuid(),
                     StudentId = metadata.StudentId,
-                    SolutionUrl = uploadedFileUrl,
+                    SolutionUrl = key,//dùng key tạo link upload
                     Status = metadata.Status,
                     Note = metadata.Note,
                     IsValid = metadata.IsValid,
@@ -142,7 +144,7 @@ namespace Submission.API.Controllers
                 return Ok(new
                 {
                     message = "Uploaded successfully",
-                    url = uploadedFileUrl,
+                    url = key,
                     submissionId = submissionRecord.Id,
                     syncedToCourseManagement = metadata.ExamId.HasValue ? syncSuccess : (bool?)null
                 });
@@ -199,6 +201,28 @@ namespace Submission.API.Controllers
                 return NotFound($"Không tìm thấy submission với ID {submissionId}");
             }
         }
+
+        [HttpGet("download/{submissionId}")]
+        public async Task<IActionResult> DownloadSubmission(Guid submissionId)
+        {
+            var submission = await _db.Submissions.FindAsync(submissionId);
+            if (submission == null)
+                return NotFound("Submission not found");
+
+            if (string.IsNullOrWhiteSpace(submission.SolutionUrl))
+                return BadRequest("Submission does not contain a file");
+
+            // SolutionUrl hiện đang chứa Key
+            string key = submission.SolutionUrl;
+
+            string presignedUrl = _storageService.GeneratePresignedUrl(key, 60); // Link sống 60 phút
+
+            return Ok(new
+            {
+                downloadUrl = presignedUrl
+            });
+        }
+
 
         // Class metadata ví dụ
         public class SubmissionMetadata
