@@ -2,15 +2,15 @@
 version: "3.9"
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=Nam@15112003
-    ports:
-      - "1432:1433"
-    volumes:
-      - sqlserver-data:/var/opt/mssql
+  # sqlserver:
+  #   image: mcr.microsoft.com/mssql/server:2022-latest
+  #   environment:
+  #     - ACCEPT_EULA=Y
+  #     - SA_PASSWORD=Nam@15112003
+  #   ports:
+  #     - "1432:1433"
+  #   volumes:
+  #     - sqlserver-data:/var/opt/mssql
 
   iam_api:
     build:
@@ -21,7 +21,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=IAMDb;User Id=sa;Password=Nam@15112003;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=server=metro.proxy.rlwy.net;port=50978;database=Account;user=root;password=kKEmWFekmuZNDnIRnwxJHHZSJdlukOYW;SslMode=None;
     # depends_on:
     #   sqlserver:
     #     condition: service_healthy
@@ -35,6 +35,18 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=server=metro.proxy.rlwy.net;port=50978;database=exam_management;user=root;password=kKEmWFekmuZNDnIRnwxJHHZSJdlukOYW;SslMode=None;
+
+  submission_api:
+    build:
+      context: .
+      dockerfile: Services/Submission/Submission.API/Dockerfile
+    ports:
+      - "8083:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=tcp:demo-db-1.database.windows.net,1433;Initial Catalog=ESGS_Submission;Persist Security Info=False;User ID=namnt;Password=Nam@15112003;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;
 
   api-gateway:
     build:
@@ -54,6 +66,7 @@ services:
     depends_on:
       - iam_api
       - course_api
+      - submission_api
 
 volumes:
   sqlserver-data:

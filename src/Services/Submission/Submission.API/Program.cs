@@ -1,11 +1,14 @@
 ﻿using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Submission.Repositories;
 using Submission.Repositories.Repositories;
 using Submission.Services.DTOs;
 using Submission.Services.StorageService;
 using Submission.Services.StudentSubmissionService;
 using Submission.Services.UploadService;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace Submission.API
 {
@@ -27,7 +30,23 @@ namespace Submission.API
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SubmissionDB")));
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+                {
+                    Description =
+                        "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
+                        "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
+                        "Example: \"Bearer [token]\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Scheme = JwtBearerDefaults.AuthenticationScheme,
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "Submission API", Version = "v1" });
+                options.OperationFilter<SecurityRequirementsOperationFilter>();
+            });
 
             // Sử dụng DI với IOptions<AwsConfig> trong AwsS3StorageService
             builder.Services.AddScoped<IStorageService, AwsS3StorageService>();
@@ -36,26 +55,39 @@ namespace Submission.API
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy(name: "AllowAll",
-                                  builder =>
-                                  {
-                                      builder.AllowAnyOrigin()
-                                             .AllowAnyMethod()
-                                             .AllowAnyHeader();
-                                  });
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
             });
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
+
+            // Configure the HTTP request pipeline.
+            app.UseSwagger(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+                {
+                    // Support both direct API access and Gateway access
+                    // Direct API as default (first in list)
+                    swaggerDoc.Servers = new List<OpenApiServer>
+                    {
+                        new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}", Description = "Direct API Access (Use this for testing)" },
+                        new OpenApiServer { Url = "http://localhost:5103/submission", Description = "Via API Gateway (Production)" }
+                    };
+                });
+            });
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
-            app.UseAuthorization();
-            app.UseCors("AllowAll");
+            app.UseRouting();                                     // 1. Routing first
+            app.UseCors();                                        // 2. CORS after routing
+            app.UseAuthentication();                              // 4. Authentication
+            app.UseAuthorization();                               // 5. Authorization
+
             app.MapControllers();
 
             app.Run();

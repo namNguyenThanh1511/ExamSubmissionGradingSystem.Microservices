@@ -77,6 +77,7 @@ app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/iam/swagger/v1/swagger.json", "IAM Service v1");
     options.SwaggerEndpoint("/course/swagger/v1/swagger.json", "Course Service v1");
+    options.SwaggerEndpoint("/submission/swagger/v1/swagger.json", "Submission Service v1");
     options.RoutePrefix = string.Empty;
 });
 
@@ -115,6 +116,17 @@ app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/course"), subApp =>
     subApp.UseEndpoints(endpoints =>
     {
         endpoints.MapReverseProxy().RequireAuthorization("AdminOnly");
+    });
+});
+
+app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/submission"), subApp =>
+{
+    subApp.UseRouting();
+    subApp.UseAuthentication();  // optional nếu miễn auth
+    subApp.UseAuthorization();   // luôn phải có
+    subApp.UseEndpoints(endpoints =>
+    {
+        endpoints.MapReverseProxy();  // Submission miễn auth, không cần RequireAuthorization()
     });
 });
 
