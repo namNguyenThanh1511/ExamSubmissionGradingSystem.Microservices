@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
+﻿using Microsoft.EntityFrameworkCore;
 using Repository.Models;
 
 namespace Repository.Data;
@@ -177,17 +174,15 @@ public partial class ExamManagementContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ExamId).HasColumnName("exam_id");
-            entity.Property(e => e.FileUrl)
-                .HasColumnType("text")
-                .HasColumnName("file_url");
+            entity.Property(e => e.ExaminerId).HasColumnName("examiner_id");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .HasColumnName("status");
             entity.Property(e => e.StudentCode)
                 .HasMaxLength(50)
                 .HasColumnName("student_code");
+            entity.Property(e => e.SubmissionId).HasColumnName("submission_id");
             entity.Property(e => e.TotalScore).HasColumnName("total_score");
-            entity.Property(e => e.ExaminerId).HasColumnName("examiner_id");
 
             entity.HasOne(d => d.Exam).WithMany(p => p.Submissions)
                 .HasForeignKey(d => d.ExamId)
@@ -195,6 +190,7 @@ public partial class ExamManagementContext : DbContext
 
             entity.HasOne(d => d.Examiner).WithMany(p => p.Submissions)
                 .HasForeignKey(d => d.ExaminerId)
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("submission_ibfk_2");
         });
 

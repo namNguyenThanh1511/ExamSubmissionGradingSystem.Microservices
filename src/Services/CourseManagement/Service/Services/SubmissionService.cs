@@ -8,15 +8,18 @@ namespace Service.Services
     {
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IExaminerRepository _examinerRepository;
+        private readonly IExamRepository _examRepository;
         private readonly IMapper _mapper;
 
         public SubmissionService(
             ISubmissionRepository submissionRepository,
             IExaminerRepository examinerRepository,
+            IExamRepository examRepository,
             IMapper mapper)
         {
             _submissionRepository = submissionRepository;
             _examinerRepository = examinerRepository;
+            _examRepository = examRepository;
             _mapper = mapper;
         }
 
@@ -24,6 +27,32 @@ namespace Service.Services
         {
             var submissions = await _submissionRepository.GetSubmissionsByExamIdAsync(examId);
             return _mapper.Map<IEnumerable<SubmissionDto>>(submissions);
+        }
+
+        public async Task<SubmissionDto> CreateSubmissionAsync(CreateSubmissionDto createSubmissionDto)
+        {
+            // Validate exam exists
+            var exam = await _examRepository.GetExamByIdAsync(createSubmissionDto.ExamId);
+            if (exam == null)
+            {
+                throw new KeyNotFoundException($"Exam with ID {createSubmissionDto.ExamId} not found");
+            }
+
+            // Check if submission with this SubmissionId already exists for this exam
+            var existingSubmissions = await _submissionRepository.GetSubmissionsByExamIdAsync(createSubmissionDto.ExamId);
+            if (existingSubmissions.Any(s => s.SubmissionId == createSubmissionDto.SubmissionId))
+            {
+                throw new InvalidOperationException($"Submission with SubmissionId {createSubmissionDto.SubmissionId} already exists for exam {createSubmissionDto.ExamId}");
+            }
+
+            // Map DTO to entity
+            var submission = _mapper.Map<Repository.Models.Submission>(createSubmissionDto);
+
+            // Create the submission
+            var createdSubmission = await _submissionRepository.CreateSubmissionAsync(submission);
+
+            // Map back to DTO
+            return _mapper.Map<SubmissionDto>(createdSubmission);
         }
 
         public async Task<SubmissionDto?> AssignExaminerAsync(long submissionId, long examinerId)

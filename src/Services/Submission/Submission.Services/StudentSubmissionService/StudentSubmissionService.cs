@@ -35,5 +35,23 @@ namespace Submission.Services.StudentSubmissionService
                 PageSize = size
             };
         }
+        public async Task<StudentSubmissionDto> GetSubmissionByIdAsync(Guid submissionId)
+        {
+            var entity = await _repo.GetSubmissionByIdAsync(submissionId);
+            if (entity == null)
+            {
+                throw new KeyNotFoundException($"Submission with ID {submissionId} not found.");
+            }
+            return new StudentSubmissionDto
+            {
+                Id = entity.Id,
+                StudentId = entity.StudentId,
+                SolutionUrl = entity.SolutionUrl,
+                IsValid = entity.IsValid,
+                Status = entity.Status,
+                Note = entity.Note,
+                UploadAt = entity.UploadAt
+            };
+        }
     }
 }

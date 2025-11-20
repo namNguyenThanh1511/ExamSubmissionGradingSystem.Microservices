@@ -27,11 +27,51 @@ namespace CourseManagement.API.Controllers
         }
 
         /// <summary>
-        /// L?y danh sách bài n?p theo examId
+        /// Táº¡o submission record má»›i - link submission tá»« Submission service vá»›i Exam
+        /// </summary>
+        /// <param name="createSubmissionDto">Submission data</param>
+        /// <returns>Submission Ä‘Ã£ Ä‘Æ°á»£c táº¡o</returns>
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateSubmission([FromBody] CreateSubmissionDto createSubmissionDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToArray();
+                    return this.ToErrorResponse("Invalid data", errors);
+                }
+
+                var submission = await _submissionService.CreateSubmissionAsync(createSubmissionDto);
+                return this.ToApiResponse(submission, $"Submission linked to exam {createSubmissionDto.ExamId} successfully");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Resource not found when creating submission");
+                return this.ToNotFoundResponse(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation when creating submission");
+                return this.ToErrorResponse("Invalid operation", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating submission");
+                return this.ToErrorResponse("Error creating submission", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// L?y danh sch bi n?p theo examId
         /// Role: Manager
         /// </summary>
         /// <param name="examId">Exam ID</param>
-        /// <returns>Danh sách bài n?p</returns>
+        /// <returns>Danh sch bi n?p</returns>
         [HttpGet]
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetSubmissions([FromQuery] long examId)
@@ -49,12 +89,12 @@ namespace CourseManagement.API.Controllers
         }
 
         /// <summary>
-        /// Phân công giám kh?o cho bài n?p
+        /// Phn cng gim kh?o cho bi n?p
         /// Role: Manager
         /// </summary>
         /// <param name="id">Submission ID</param>
         /// <param name="examinerId">Examiner ID</param>
-        /// <returns>Bài n?p ?ã ???c c?p nh?t</returns>
+        /// <returns>Bi n?p ? ???c c?p nh?t</returns>
         [HttpPatch("{id}/assign/{examinerId}")]
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> AssignExaminer(long id, long examinerId)
@@ -77,12 +117,12 @@ namespace CourseManagement.API.Controllers
         }
 
         /// <summary>
-        /// Examiner ch?m ?i?m bài n?p
+        /// Examiner ch?m ?i?m bi n?p
         /// Role: Examiner
         /// </summary>
         /// <param name="id">Submission ID</param>
         /// <param name="gradeSubmissionDto">Grade data</param>
-        /// <returns>Bài n?p ?ã ???c ch?m ?i?m</returns>
+        /// <returns>Bi n?p ? ???c ch?m ?i?m</returns>
         [HttpPatch("{id}/grade")]
         [Authorize(Roles = "Examiner")]
         public async Task<IActionResult> GradeSubmission(long id, [FromBody] GradeSubmissionDto gradeSubmissionDto)

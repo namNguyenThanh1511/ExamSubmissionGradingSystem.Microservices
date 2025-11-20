@@ -2,6 +2,7 @@
 using Submission.API.DTOs;
 using Submission.Repositories;
 using Submission.Repositories.Entities;
+using Submission.Services.CourseManagementClient;
 using Submission.Services.StudentSubmissionService;
 using Submission.Services.UploadService;
 using System.IO.Compression;
@@ -16,12 +17,21 @@ namespace Submission.API.Controllers
         private readonly IStorageService _storageService;
         private readonly AppDbContext _db;
         private readonly IStudentSubmissionService _service;
+        private readonly ICourseManagementClient _courseManagementClient;
+        private readonly ILogger<SubmissionController> _logger;
 
-        public SubmissionController(IStorageService storageService, AppDbContext context, IStudentSubmissionService studentSubmissionService)
+        public SubmissionController(
+            IStorageService storageService,
+            AppDbContext context,
+            IStudentSubmissionService studentSubmissionService,
+            ICourseManagementClient courseManagementClient,
+            ILogger<SubmissionController> logger)
         {
             _storageService = storageService;
             _db = context;
             _service = studentSubmissionService;
+            _courseManagementClient = courseManagementClient;
+            _logger = logger;
         }
         [HttpPost("upload")]
         public async Task<IActionResult> UploadSubmission([FromForm] SubmissionUploadDto dto)
@@ -34,7 +44,7 @@ namespace Submission.API.Controllers
                 return BadRequest("Metadata is required");
 
             // --- Parse metadata ---
-            SubmissionMetadata metadata;
+            SubmissionMetadata? metadata;
             try
             {
                 metadata = JsonSerializer.Deserialize<SubmissionMetadata>(dto.Metadata);
@@ -95,6 +105,7 @@ namespace Submission.API.Controllers
                 // 🔹 Insert DB record
                 var submissionRecord = new StudentSubmission
                 {
+                    Id = Guid.NewGuid(),
                     StudentId = metadata.StudentId,
                     SolutionUrl = uploadedFileUrl,
                     Status = metadata.Status,
@@ -106,7 +117,35 @@ namespace Submission.API.Controllers
                 _db.Submissions.Add(submissionRecord);
                 await _db.SaveChangesAsync();
 
-                return Ok(new { message = "Uploaded successfully", url = uploadedFileUrl });
+                // 🔹 Tự động đồng bộ với CourseManagement nếu có ExamId
+                bool syncSuccess = true;
+                if (metadata.ExamId.HasValue)
+                {
+                    try
+                    {
+                        syncSuccess = await _courseManagementClient.LinkSubmissionToExamAsync(
+                            submissionRecord.Id,
+                            metadata.ExamId.Value,
+                            metadata.StudentId
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error nhưng không fail request
+                        _logger.LogError(ex,
+                            "Failed to sync submission {SubmissionId} to CourseManagement",
+                            submissionRecord.Id);
+                        syncSuccess = false;
+                    }
+                }
+
+                return Ok(new
+                {
+                    message = "Uploaded successfully",
+                    url = uploadedFileUrl,
+                    submissionId = submissionRecord.Id,
+                    syncedToCourseManagement = metadata.ExamId.HasValue ? syncSuccess : (bool?)null
+                });
             }
             catch (Exception ex)
             {
@@ -147,12 +186,27 @@ namespace Submission.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{submissionId}")]
+        public async Task<IActionResult> GetSubmissionById([FromRoute] Guid submissionId)
+        {
+            try
+            {
+                var result = await _service.GetSubmissionByIdAsync(submissionId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Không tìm thấy submission với ID {submissionId}");
+            }
+        }
+
         // Class metadata ví dụ
         public class SubmissionMetadata
         {
-            public string StudentId { get; set; }
-            public string Status { get; set; }
-            public string Note { get; set; }
+            public string StudentId { get; set; } = string.Empty;
+            public long? ExamId { get; set; }
+            public string Status { get; set; } = string.Empty;
+            public string Note { get; set; } = string.Empty;
             public bool IsValid { get; set; }
             public DateTime UploadAt { get; set; }
         }

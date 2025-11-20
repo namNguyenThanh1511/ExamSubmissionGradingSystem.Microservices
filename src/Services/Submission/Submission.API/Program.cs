@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Submission.Repositories;
 using Submission.Repositories.Repositories;
+using Submission.Services.CourseManagementClient;
 using Submission.Services.DTOs;
 using Submission.Services.StorageService;
 using Submission.Services.StudentSubmissionService;
@@ -53,6 +54,14 @@ namespace Submission.API
             builder.Services.AddScoped<IStudentSubmissionRepository, StudentSubmissionRepository>();
             builder.Services.AddScoped<IStudentSubmissionService, StudentSubmissionService>();
 
+            // Đăng ký HttpClient cho CourseManagementClient
+            builder.Services.AddHttpClient<ICourseManagementClient, CourseManagementClient>(client =>
+            {
+                var baseUrl = builder.Configuration["CourseManagement:BaseUrl"] ?? "http://localhost:5066";
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
@@ -83,7 +92,7 @@ namespace Submission.API
             });
             app.UseSwaggerUI();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseRouting();                                     // 1. Routing first
             app.UseCors();                                        // 2. CORS after routing
             app.UseAuthentication();                              // 4. Authentication

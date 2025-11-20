@@ -6,6 +6,7 @@ namespace Repository.Repository
     {
         Task<IEnumerable<Submission>> GetSubmissionsByExamIdAsync(long examId);
         Task<Submission?> GetSubmissionByIdAsync(long id);
+        Task<Submission> CreateSubmissionAsync(Submission submission);
         Task<Submission> UpdateSubmissionAsync(Submission submission);
     }
 }

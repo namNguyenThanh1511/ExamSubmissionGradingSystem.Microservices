@@ -19,7 +19,7 @@ namespace Repository.Repository
                 .Include(s => s.Exam)
                 .Include(s => s.Examiner)
                 .Where(s => s.ExamId == examId)
-                .OrderBy(s => s.StudentCode)
+                .OrderBy(s => s.Id)
                 .ToListAsync();
         }
 
@@ -29,6 +29,15 @@ namespace Repository.Repository
                 .Include(s => s.Exam)
                 .Include(s => s.Examiner)
                 .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
+        public async Task<Submission> CreateSubmissionAsync(Submission submission)
+        {
+            _context.Submissions.Add(submission);
+            await _context.SaveChangesAsync();
+            
+            // Reload with navigation properties
+            return await GetSubmissionByIdAsync(submission.Id) ?? submission;
         }
 
         public async Task<Submission> UpdateSubmissionAsync(Submission submission)

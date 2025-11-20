@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Repository.Models;
+﻿namespace Repository.Models;
 
 public partial class Submission
 {
@@ -9,9 +6,9 @@ public partial class Submission
 
     public long? ExamId { get; set; }
 
-    public string? StudentCode { get; set; }
+    public Guid? SubmissionId { get; set; }
 
-    public string? FileUrl { get; set; }
+    public string? StudentCode { get; set; }
 
     public string? Status { get; set; }
 
