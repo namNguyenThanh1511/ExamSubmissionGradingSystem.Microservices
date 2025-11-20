@@ -43,6 +43,8 @@ services:
       dockerfile: Services/Submission/Submission.API/Dockerfile
     ports:
       - "8083:8080"
+    env_file:
+      - Services/Submission/Submission.API/.env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
