@@ -31,7 +31,7 @@ namespace CourseManagement.API.Controllers
         /// </summary>
         /// <returns>List of examiners</returns>
         [HttpGet]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
         public async Task<IActionResult> GetAllExaminers()
         {
             try
@@ -53,7 +53,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="createExaminerDto">Examiner data</param>
         /// <returns>Created examiner</returns>
         [HttpPost]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateExaminer([FromBody] CreateExaminerDto createExaminerDto)
         {
             try

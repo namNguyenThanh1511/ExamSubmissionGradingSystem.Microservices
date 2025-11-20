@@ -32,7 +32,7 @@ namespace CourseManagement.API.Controllers
         /// </summary>
         /// <returns>List of all subjects</returns>
         [HttpGet]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
         public async Task<IActionResult> GetAllSubjects()
         {
             try
@@ -53,7 +53,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="id">Subject ID</param>
         /// <returns>Subject details</returns>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
 
         public async Task<IActionResult> GetSubjectById(long id)
         {

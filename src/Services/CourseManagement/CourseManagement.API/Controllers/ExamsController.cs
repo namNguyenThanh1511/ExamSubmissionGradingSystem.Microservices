@@ -34,7 +34,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="subjectId">Optional: Filter by subject ID</param>
         /// <returns>List of exams matching the filter criteria</returns>
         [HttpGet]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
         public async Task<IActionResult> GetAllExams([FromQuery] long? semesterId = null, [FromQuery] long? subjectId = null)
         {
             try
@@ -70,7 +70,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="id">Exam ID</param>
         /// <returns>Exam details</returns>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
 
         public async Task<IActionResult> GetExamById(long id)
         {

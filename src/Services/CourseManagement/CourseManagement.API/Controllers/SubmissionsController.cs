@@ -73,7 +73,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="examId">Exam ID</param>
         /// <returns>Danh sch bi n?p</returns>
         [HttpGet]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
         public async Task<IActionResult> GetSubmissions([FromQuery] long examId)
         {
             try

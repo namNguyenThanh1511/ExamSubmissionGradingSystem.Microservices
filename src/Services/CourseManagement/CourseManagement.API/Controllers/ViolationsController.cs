@@ -33,7 +33,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="status">Optional: Filter by verified status (true/false)</param>
         /// <returns>Danh sách vi ph?m</returns>
         [HttpGet]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin,Manager,Examiner")]
         public async Task<IActionResult> GetViolations([FromQuery] bool? status = null)
         {
             try
