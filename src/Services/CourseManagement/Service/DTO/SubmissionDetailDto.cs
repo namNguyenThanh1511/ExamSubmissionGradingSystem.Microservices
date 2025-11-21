@@ -25,6 +25,9 @@ namespace Service.DTO
         [JsonPropertyName("examinerName")]
         public string? ExaminerName { get; set; }
 
+        [JsonPropertyName("status")]
+        public string Status { get; set; } = string.Empty;
+
         [JsonPropertyName("criterionScores")]
         public List<CriterionScoreDetailDto> CriterionScores { get; set; } = new List<CriterionScoreDetailDto>();
     }
