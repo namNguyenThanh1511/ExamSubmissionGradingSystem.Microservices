@@ -1,4 +1,7 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Repository.Data;
+using Repository.Models;
 using Repository.Repository;
 using Service.DTO;
 
@@ -9,17 +12,23 @@ namespace Service.Services
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IExaminerRepository _examinerRepository;
         private readonly IExamRepository _examRepository;
+        private readonly ICriterionScoreRepository _criterionScoreRepository;
+        private readonly ExamManagementContext _context;
         private readonly IMapper _mapper;
 
         public SubmissionService(
             ISubmissionRepository submissionRepository,
             IExaminerRepository examinerRepository,
             IExamRepository examRepository,
+            ICriterionScoreRepository criterionScoreRepository,
+            ExamManagementContext context,
             IMapper mapper)
         {
             _submissionRepository = submissionRepository;
             _examinerRepository = examinerRepository;
             _examRepository = examRepository;
+            _criterionScoreRepository = criterionScoreRepository;
+            _context = context;
             _mapper = mapper;
         }
 
@@ -92,6 +101,73 @@ namespace Service.Services
             var updatedSubmission = await _submissionRepository.UpdateSubmissionAsync(submission);
 
             return _mapper.Map<SubmissionDto>(updatedSubmission);
+        }
+
+        public async Task<SubmissionDto> GradeSubmissionByCriteriaAsync(GradeSubmissionByCriteriaDto dto)
+        {
+            // Validate submission exists
+            var submission = await _submissionRepository.GetSubmissionByIdAsync(dto.SubmissionId);
+            if (submission == null)
+            {
+                throw new KeyNotFoundException($"Submission with ID {dto.SubmissionId} not found");
+            }
+
+            double totalScore = 0;
+
+            // Process each criterion score
+            foreach (var scoreDto in dto.Scores)
+            {
+                // Validate rubric criterion exists and get max score
+                var rubricCriterion = await _context.RubricCriteria
+                    .FirstOrDefaultAsync(rc => rc.Id == scoreDto.CriterionId);
+
+                if (rubricCriterion == null)
+                {
+                    throw new KeyNotFoundException($"Rubric criterion with ID {scoreDto.CriterionId} not found");
+                }
+
+                // Validate score doesn't exceed max score
+                if (rubricCriterion.MaxScore.HasValue && scoreDto.Score > rubricCriterion.MaxScore.Value)
+                {
+                    throw new InvalidOperationException(
+                        $"Score {scoreDto.Score} exceeds maximum score {rubricCriterion.MaxScore.Value} for criterion {rubricCriterion.CriterionName}");
+                }
+
+                // Create or update criterion score
+                var criterionScore = new CriterionScore
+                {
+                    SubmissionId = dto.SubmissionId,
+                    RubricCriterionId = scoreDto.CriterionId,
+                    Score = scoreDto.Score,
+                    Comment = scoreDto.Comment
+                };
+
+                await _criterionScoreRepository.CreateOrUpdateCriterionScoreAsync(criterionScore);
+
+                // Add to total score
+                totalScore += scoreDto.Score;
+            }
+
+            // Update submission total score
+            submission.TotalScore = totalScore;
+            var updatedSubmission = await _submissionRepository.UpdateSubmissionAsync(submission);
+
+            return _mapper.Map<SubmissionDto>(updatedSubmission);
+        }
+
+        public async Task<SubmissionDetailDto?> GetSubmissionDetailAsync(long submissionId)
+        {
+            // Get submission with all related data including criterion scores
+            var submission = await _submissionRepository.GetSubmissionDetailByIdAsync(submissionId);
+            
+            if (submission == null)
+            {
+                return null;
+            }
+
+            // Map to detail DTO using AutoMapper
+            var detailDto = _mapper.Map<SubmissionDetailDto>(submission);
+            return detailDto;
         }
     }
 }

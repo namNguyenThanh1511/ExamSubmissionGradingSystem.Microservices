@@ -34,6 +34,7 @@ namespace CourseManagement.API
             builder.Services.AddScoped<IRubricRepository, RubricRepository>();
             builder.Services.AddScoped<IExaminerRepository, ExaminerRepository>();
             builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
+            builder.Services.AddScoped<ICriterionScoreRepository, CriterionScoreRepository>();
             builder.Services.AddScoped<IViolationRepository, ViolationRepository>();
 
             // Register Services

@@ -1,4 +1,7 @@
-﻿namespace Repository.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Repository.Models;
 
 public partial class Submission
 {
@@ -15,6 +18,8 @@ public partial class Submission
     public double? TotalScore { get; set; }
 
     public long? ExaminerId { get; set; }
+
+    public virtual ICollection<CriterionScore> CriterionScores { get; set; } = new List<CriterionScore>();
 
     public virtual Exam? Exam { get; set; }
 

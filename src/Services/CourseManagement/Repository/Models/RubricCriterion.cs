@@ -13,5 +13,7 @@ public partial class RubricCriterion
 
     public double? MaxScore { get; set; }
 
+    public virtual ICollection<CriterionScore> CriterionScores { get; set; } = new List<CriterionScore>();
+
     public virtual Rubric? Rubric { get; set; }
 }

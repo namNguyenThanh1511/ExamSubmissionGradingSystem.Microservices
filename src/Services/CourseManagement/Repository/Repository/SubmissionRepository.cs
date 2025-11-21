@@ -31,6 +31,16 @@ namespace Repository.Repository
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
+        public async Task<Submission?> GetSubmissionDetailByIdAsync(long id)
+        {
+            return await _context.Submissions
+                .Include(s => s.Exam)
+                .Include(s => s.Examiner)
+                .Include(s => s.CriterionScores)
+                    .ThenInclude(cs => cs.RubricCriterion)
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
         public async Task<Submission> CreateSubmissionAsync(Submission submission)
         {
             _context.Submissions.Add(submission);

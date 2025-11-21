@@ -14,6 +14,8 @@ public partial class ExamManagementContext : DbContext
     {
     }
 
+    public virtual DbSet<CriterionScore> CriterionScores { get; set; }
+
     public virtual DbSet<Exam> Exams { get; set; }
 
     public virtual DbSet<Examiner> Examiners { get; set; }
@@ -43,6 +45,33 @@ public partial class ExamManagementContext : DbContext
         modelBuilder
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
+
+        modelBuilder.Entity<CriterionScore>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("criterion_score");
+
+            entity.HasIndex(e => e.RubricCriterionId, "rubric_criterion_id");
+
+            entity.HasIndex(e => e.SubmissionId, "submission_id");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Comment)
+                .HasColumnType("text")
+                .HasColumnName("comment");
+            entity.Property(e => e.RubricCriterionId).HasColumnName("rubric_criterion_id");
+            entity.Property(e => e.Score).HasColumnName("score");
+            entity.Property(e => e.SubmissionId).HasColumnName("submission_id");
+
+            entity.HasOne(d => d.RubricCriterion).WithMany(p => p.CriterionScores)
+                .HasForeignKey(d => d.RubricCriterionId)
+                .HasConstraintName("criterion_score_ibfk_2");
+
+            entity.HasOne(d => d.Submission).WithMany(p => p.CriterionScores)
+                .HasForeignKey(d => d.SubmissionId)
+                .HasConstraintName("criterion_score_ibfk_1");
+        });
 
         modelBuilder.Entity<Exam>(entity =>
         {

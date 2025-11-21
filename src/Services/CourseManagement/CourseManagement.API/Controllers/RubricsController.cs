@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Service.DTO;
 using Service.Services;
 using Shared.Extension;
-using Shared.Models;
 
 namespace CourseManagement.API.Controllers
 {
@@ -54,7 +53,7 @@ namespace CourseManagement.API.Controllers
         /// <param name="createRubricDto">Rubric data including list of criteria</param>
         /// <returns>Created rubric with criteria</returns>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
 
         public async Task<IActionResult> CreateRubric([FromBody] CreateRubricDto createRubricDto)
         {
@@ -70,7 +69,7 @@ namespace CourseManagement.API.Controllers
                 }
 
                 var rubric = await _rubricService.CreateRubricAsync(createRubricDto);
-                
+
                 return this.ToApiResponse(rubric, "Rubric created successfully");
             }
             catch (InvalidOperationException ex)
