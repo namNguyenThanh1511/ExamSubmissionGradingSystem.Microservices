@@ -10,5 +10,7 @@ namespace Service.Services
         Task<SubmissionDto> GradeSubmissionAsync(long submissionId, double totalScore);
         Task<SubmissionDto> GradeSubmissionByCriteriaAsync(GradeSubmissionByCriteriaDto dto);
         Task<SubmissionDetailDto?> GetSubmissionDetailAsync(long submissionId);
+
+        Task<SubmissionDto> ConfirmSubmissionAsync(long submissionId);
     }
 }

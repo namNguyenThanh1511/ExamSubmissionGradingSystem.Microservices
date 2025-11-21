@@ -150,6 +150,7 @@ namespace Service.Services
 
             // Update submission total score
             submission.TotalScore = totalScore;
+            submission.Status = "Chờ admin xác nhận kết quả chấm điểm";
             var updatedSubmission = await _submissionRepository.UpdateSubmissionAsync(submission);
 
             return _mapper.Map<SubmissionDto>(updatedSubmission);
@@ -168,6 +169,18 @@ namespace Service.Services
             // Map to detail DTO using AutoMapper
             var detailDto = _mapper.Map<SubmissionDetailDto>(submission);
             return detailDto;
+        }
+        public async Task<SubmissionDto> ConfirmSubmissionAsync(long submissionId)
+        {
+            // Get submission
+            var submission = await _submissionRepository.GetSubmissionByIdAsync(submissionId);
+            if (submission == null)
+            {
+                throw new KeyNotFoundException($"Submission with ID {submissionId} not found");
+            }
+            submission.Status = "Đã xác nhận kết quả chấm điểm";
+            var updatedSubmission = await _submissionRepository.UpdateSubmissionAsync(submission);
+            return _mapper.Map<SubmissionDto>(updatedSubmission);
         }
     }
 }

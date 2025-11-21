@@ -221,5 +221,32 @@ namespace CourseManagement.API.Controllers
                 return this.ToErrorResponse("Error grading submission by criteria", ex.Message);
             }
         }
+
+        /// <summary>
+        /// Admin xác nhận kết quả chấm điểm của submission
+        /// Role: Admin
+        /// </summary>
+        /// <param name="id">Submission ID</param>
+        /// <returns>Bài nộp đã được xác nhận kết quả chấm điểm</returns>
+        [HttpPatch("{id}/confirm")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ConfirmSubmission(long id)
+        {
+            try
+            {
+                var submission = await _submissionService.ConfirmSubmissionAsync(id);
+                return this.ToApiResponse(submission, $"Submission {id} confirmed successfully");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Resource not found when confirming submission");
+                return this.ToNotFoundResponse(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirming submission ID {SubmissionId}", id);
+                return this.ToErrorResponse("Error confirming submission", ex.Message);
+            }
+        }
     }
 }
