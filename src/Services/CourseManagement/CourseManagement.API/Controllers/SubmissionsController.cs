@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Service.DTO;
 using Service.Services;
 using Shared.Extension;
+using CourseManagement.API.Hubs;
+using System.Security.Claims;
 
 namespace CourseManagement.API.Controllers
 {
@@ -19,11 +22,16 @@ namespace CourseManagement.API.Controllers
     {
         private readonly ISubmissionService _submissionService;
         private readonly ILogger<SubmissionsController> _logger;
+        private readonly IHubContext<SubmissionHub> _hubContext;
 
-        public SubmissionsController(ISubmissionService submissionService, ILogger<SubmissionsController> logger)
+        public SubmissionsController(
+            ISubmissionService submissionService, 
+            ILogger<SubmissionsController> logger,
+            IHubContext<SubmissionHub> hubContext)
         {
             _submissionService = submissionService;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         /// <summary>
@@ -203,6 +211,56 @@ namespace CourseManagement.API.Controllers
                 }
 
                 var submission = await _submissionService.GradeSubmissionByCriteriaAsync(gradeByCriteriaDto);
+                
+                // Send SignalR notification
+                try
+                {
+                    var submissionDetail = await _submissionService.GetSubmissionDetailAsync(gradeByCriteriaDto.SubmissionId);
+                    if (submissionDetail != null)
+                    {
+                        // Get examiner name from current user claims
+                        var examinerName = User.FindFirst("FullName")?.Value 
+                            ?? User.FindFirst(ClaimTypes.Name)?.Value 
+                            ?? User.Identity?.Name 
+                            ?? "Examiner";
+                        
+                        // Send notification to exam group
+                        if (submissionDetail.ExamId.HasValue)
+                        {
+                            await _hubContext.Clients.Group($"exam-{submissionDetail.ExamId.Value}")
+                                .SendAsync("SubmissionGraded", new
+                                {
+                                    submissionId = submissionDetail.Id,
+                                    examId = submissionDetail.ExamId,
+                                    studentCode = submissionDetail.StudentCode,
+                                    totalScore = submissionDetail.TotalScore,
+                                    status = submissionDetail.Status,
+                                    examinerName = examinerName,
+                                    gradedAt = DateTime.UtcNow
+                                });
+                        }
+                        
+                        // Send notification to specific submission group
+                        await _hubContext.Clients.Group($"submission-{submissionDetail.Id}")
+                            .SendAsync("SubmissionGraded", new
+                            {
+                                submissionId = submissionDetail.Id,
+                                examId = submissionDetail.ExamId,
+                                studentCode = submissionDetail.StudentCode,
+                                totalScore = submissionDetail.TotalScore,
+                                status = submissionDetail.Status,
+                                criterionScores = submissionDetail.CriterionScores,
+                                examinerName = examinerName,
+                                gradedAt = DateTime.UtcNow
+                            });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail the request
+                    _logger.LogError(ex, "Failed to send SignalR notification for submission {SubmissionId}", gradeByCriteriaDto.SubmissionId);
+                }
+                
                 return this.ToApiResponse(submission, $"Submission {gradeByCriteriaDto.SubmissionId} graded successfully by criteria");
             }
             catch (KeyNotFoundException ex)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -8,6 +9,7 @@ using Service.Services;
 using Service.Mapper;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using CourseManagement.API.Hubs;
 
 namespace CourseManagement.API
 {
@@ -79,7 +81,36 @@ namespace CourseManagement.API
                     ValidAudience = jwtSettings["validAudience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
                 };
+
+                // Configure JWT for SignalR
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        
+                        // If the request is for SignalR hub, get token from query string
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        // Also support Authorization header for SignalR
+                        else if (string.IsNullOrEmpty(context.Token) && path.StartsWithSegments("/hubs"))
+                        {
+                            var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                            {
+                                context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                            }
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
+
+            // Add SignalR
+            builder.Services.AddSignalR();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -129,6 +160,10 @@ namespace CourseManagement.API
 
 
             app.MapControllers();
+            
+            // Map SignalR Hub
+            app.MapHub<SubmissionHub>("/hubs/submission");
+            
             // Sau app.MapControllers();
             app.MapGet("/health", () => Results.Ok("Course Management API is healthy!"));
             app.Run();

@@ -52,6 +52,7 @@ namespace Service.Mapper
             CreateMap<Submission, SubmissionDetailDto>()
                 .ForMember(dest => dest.ExaminerName, opt => opt.MapFrom(src => src.Examiner != null ? src.Examiner.FullName : null))
                 .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode ?? string.Empty))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status ?? string.Empty))
                 .ForMember(dest => dest.CriterionScores, opt => opt.MapFrom(src => src.CriterionScores));
             
             CreateMap<CriterionScore, CriterionScoreDetailDto>()
